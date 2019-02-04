@@ -49,6 +49,7 @@ public class Main {
                 .url("http://87.237.204.211:8080/ns_bike/api/stanje/eng/")
                 .build();
 
+		// TODO: mkdir /tmp/nsbike.rs/en 
 
         SystemInformation systemInformation = new SystemInformation(lastUpdated, 86400, new SystemInformationData("http://nsbike.rs/", "en", "NS Bike", null, "PUC Novi Sad", "http://nsbike.rs/", "http://nsbike.rs/2018/03/26/pricelist/", "2015-03-26", "+381214724140", "pitanja@parkingns.rs", "Europe/Belgrade", "https://creativecommons.org/licenses/by-sa/4.0/"));
         writer.writeValue(new File("/tmp/nsbike.rs/en/system_information.json"), systemInformation);
@@ -71,7 +72,7 @@ public class Main {
                 new SystemPricingPlansPlan("http://nsbike.rs/#season", "http://nsbike.rs/2018/03/26/pricelist/", "Season ticket", "RSD", 1100, 0, "Two hours daily during season"),
                 new SystemPricingPlansPlan("http://nsbike.rs/#card", "http://nsbike.rs/2018/03/26/pricelist/", "Customer Card", "RSD", 600, 0, "Cost for the customer card")
                 )));
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_princing_plans.json"), systemRegions);
+        writer.writeValue(new File("/tmp/nsbike.rs/en/system_princing_plans.json"), systemPricingPlans);
 
         SystemAlerts systemAlerts = new SystemAlerts(lastUpdated, 86400, null);
         writer.writeValue(new File("/tmp/nsbike.rs/en/system_alerts.json"), systemAlerts);
