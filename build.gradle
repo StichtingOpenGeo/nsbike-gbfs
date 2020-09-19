@@ -1,6 +1,7 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '6.0.0'
 }
 
 repositories {
@@ -14,6 +15,7 @@ repositories {
 
 group 'com.bliksemlabs'
 version '1.0-SNAPSHOT'
+mainClassName = 'com.bliksemlabs.nsbike.Main'
 
 sourceCompatibility = 1.11
 
@@ -28,8 +30,10 @@ dependencies {
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 task serverJar(type: ShadowJar) {
-    manifest.attributes 'Main-Class': 'com.bliksemlabs.nsbike.Main'
-    from(project.convention.getPlugin(JavaPluginConvention).sourceSets.main.output)
-    configurations = [project.configurations.runtime]
+    manifest.attributes 'Main-Class': mainClassName
+    archiveClassifier.set("")
+    from sourceSets.main.output
+    project.configurations.implementation.canBeResolved = true
+    configurations = [project.configurations.implementation]
 }
 jar.dependsOn(serverJar)
