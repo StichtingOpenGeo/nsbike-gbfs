@@ -24,6 +24,7 @@ dependencies {
     implementation group: 'org.zeromq', name: 'jeromq', version: '0.5.+'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.11.2'
     implementation 'com.squareup.okhttp3:okhttp:4.8.+'
+    implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
     testCompileOnly group: 'junit', name: 'junit', version: '4.+'
 }
 

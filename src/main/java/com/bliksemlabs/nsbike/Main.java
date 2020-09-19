@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.cli.*;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
@@ -29,14 +30,53 @@ import java.util.zip.GZIPOutputStream;
 
 public class Main {
     public static String baseUrl = "http://gbfs.openov.org/nsbike.rs/en/";
+    public static String pushAddr = "tcp://127.0.0.1:6706";
+    public static Path basePath = Path.of("/home/projects/gbfs.openov.org/nsbike.rs/en");
+
+    public static void clioptions(String[] args) {
+        Options options = new Options();
+        options.addOption("pushAddr", true, "ZeroMQ Push URI");
+        options.addOption("basePath", true, "Base path on the filesystem");
+        options.addOption("baseUrl", true, "URL for GBFS");
+        options.addOption("help", "print this message" );
+
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine cmd = parser.parse(options, args);
+
+            if (cmd.hasOption("help")) {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp( "java -jar nsbike.jar", options );
+                System.exit(-1);
+            }
+
+            if (cmd.hasOption("push")) {
+                pushAddr = cmd.getOptionValue("pushAddr");
+            }
+
+            if (cmd.hasOption("basePath")) {
+                basePath = Path.of(cmd.getOptionValue("basePath"));
+            }
+
+            if (cmd.hasOption("baseUrl")) {
+                baseUrl = cmd.getOptionValue("baseUrl");
+            }
+
+        } catch (Exception e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( "java -jar nsbike.jar", options );
+            System.exit(-1);
+        }
+    }
 
     public static void main(String[] args) throws Exception {
-        Path basePath = Path.of(args[0]);
+        clioptions(args);
+
         Files.createDirectories(basePath);
 
         final ZContext context = new ZContext(1);
         ZMQ.Socket pusher = context.createSocket(SocketType.PUSH);
-        pusher.connect("tcp://127.0.0.1:6706");
+        pusher.connect(pushAddr);
 
         final ObjectMapper objectMapper = new ObjectMapper();
         final ObjectWriter writer = objectMapper.writer(new DefaultPrettyPrinter());
