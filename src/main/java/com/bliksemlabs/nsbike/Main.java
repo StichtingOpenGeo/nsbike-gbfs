@@ -13,7 +13,6 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,8 +29,8 @@ import java.util.zip.GZIPOutputStream;
 
 public class Main {
     public static String baseUrl = "http://gbfs.openov.org/nsbike.rs/en/";
-    public static String pushAddr = "tcp://127.0.0.1:6706";
-    public static Path basePath = Path.of("/home/projects/gbfs.openov.org/nsbike.rs/en");
+    public static String pushAddr = "tcp://127.0.0.1:6705";
+    public static Path basePath = Path.of("/home/projects/gbfs.openov.org/htdocs/nsbike.rs/en");
 
     public static void clioptions(String[] args) {
         Options options = new Options();

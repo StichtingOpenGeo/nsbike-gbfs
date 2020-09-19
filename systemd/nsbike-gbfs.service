@@ -1,0 +1,13 @@
+[Unit]
+Description=NSbike GBFS
+After=syslog.target network.target
+
+[Service]
+User=nsbike
+Restart=always
+RestartSec=15
+ExecStart=java -jar nsbike-1.0-SNAPSHOT.jar -baseUrl "http://gbfs.openov.org/nsbike.rs/en/" -pushAddr "tcp://127.0.0.1:6705" -basePath "/home/projects/gbfs.openov.org/htdocs/nsbike.rs/en"
+WorkingDirectory=/home/projects/gbfs.openov.org/src/nsbike-gbfs
+
+[Install]
+WantedBy=multi-user.target
