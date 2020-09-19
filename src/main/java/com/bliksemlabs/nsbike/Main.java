@@ -7,11 +7,15 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.zeromq.SocketType;
+import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -24,9 +28,14 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 public class Main {
+    public static String baseUrl = "http://gbfs.openov.org/nsbike.rs/en/";
+
     public static void main(String[] args) throws Exception {
-        final ZMQ.Context context = ZMQ.context(1);
-        final ZMQ.Socket pusher = context.socket(ZMQ.PUSH);
+        Path basePath = Path.of(args[0]);
+        Files.createDirectories(basePath);
+
+        final ZContext context = new ZContext(1);
+        ZMQ.Socket pusher = context.createSocket(SocketType.PUSH);
         pusher.connect("tcp://127.0.0.1:6706");
 
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -35,36 +44,26 @@ public class Main {
         final OkHttpClient client = new OkHttpClient();
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-        // final Request requestSr = new Request.Builder()
-        //        .url("http://87.237.204.211:8080/ns_bike/api/stanje/")
-        //        .build();
-        //
-        // Response responseSr = client.newCall(requestSr).execute();
-        // if (responseSr.isSuccessful()) {
-        // }
-
         long lastUpdated = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
 
         final Request requestEng = new Request.Builder()
                 .url("http://87.237.204.211:8080/ns_bike/api/stanje/eng/")
                 .build();
 
-		// TODO: mkdir /tmp/nsbike.rs/en 
-
         SystemInformation systemInformation = new SystemInformation(lastUpdated, 86400, new SystemInformationData("http://nsbike.rs/", "en", "NS Bike", null, "PUC Novi Sad", "http://nsbike.rs/", "http://nsbike.rs/2018/03/26/pricelist/", "2015-03-26", "+381214724140", "pitanja@parkingns.rs", "Europe/Belgrade", "https://creativecommons.org/licenses/by-sa/4.0/"));
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_information.json"), systemInformation);
+        writer.writeValue(basePath.resolve("system_information.json").toFile(), systemInformation);
 
         FreeBikeStatus freeBikeStatus = new FreeBikeStatus(lastUpdated, 86400, null);
-        writer.writeValue(new File("/tmp/nsbike.rs/en/free_bike_status.json"), freeBikeStatus);
+        writer.writeValue(basePath.resolve("free_bike_status.json").toFile(), freeBikeStatus);
 
         SystemHours systemHours = new SystemHours(lastUpdated, 86400, new SystemHoursData(Arrays.asList(new SystemHoursRentalHour(Arrays.asList("MEMBER"), Arrays.asList("mon", "tue", "wed", "thu", "fri", "sat", "sun"), "00:00:00", "23:59:59"))));
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_hours.json"), systemHours);
+        writer.writeValue(basePath.resolve("system_hours.json").toFile(), systemHours);
 
         SystemCalendar systemCalendar = new SystemCalendar(lastUpdated, 86400, null);
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_calendar.json"), systemCalendar);
+        writer.writeValue(basePath.resolve("system_calendar.json").toFile(), systemCalendar);
 
         SystemRegions systemRegions = new SystemRegions(lastUpdated, 86400, new SystemRegionsData(Arrays.asList(new SystemRegionsRegion("http://novisad.rs/", "Novi Sad"))));
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_regions.json"), systemRegions);
+        writer.writeValue(basePath.resolve("system_regions.json").toFile(), systemRegions);
         
         SystemPricingPlans systemPricingPlans = new SystemPricingPlans(lastUpdated, 86400, new SystemPricingPlansData(Arrays.asList(
                 new SystemPricingPlansPlan("http://nsbike.rs/#onehour", "http://nsbike.rs/2018/03/26/pricelist/", "One hour bicycle rental", "RSD", 30, 0, "One hour bicycle rental"),
@@ -72,25 +71,25 @@ public class Main {
                 new SystemPricingPlansPlan("http://nsbike.rs/#season", "http://nsbike.rs/2018/03/26/pricelist/", "Season ticket", "RSD", 1100, 0, "Two hours daily during season"),
                 new SystemPricingPlansPlan("http://nsbike.rs/#card", "http://nsbike.rs/2018/03/26/pricelist/", "Customer Card", "RSD", 600, 0, "Cost for the customer card")
                 )));
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_princing_plans.json"), systemPricingPlans);
+        writer.writeValue(basePath.resolve("system_princing_plans.json").toFile(), systemPricingPlans);
 
         SystemAlerts systemAlerts = new SystemAlerts(lastUpdated, 86400, null);
-        writer.writeValue(new File("/tmp/nsbike.rs/en/system_alerts.json"), systemAlerts);
+        writer.writeValue(basePath.resolve("system_alerts.json").toFile(), systemAlerts);
 
-        GBFS gbfs = new GBFS(lastUpdated, 86400, new GBFSData(new HashMap<String, GBFSLanguage>() {{
+        GBFS gbfs = new GBFS(lastUpdated, 86400, new GBFSData(new HashMap<>() {{
             put("en", new GBFSLanguage(Arrays.asList(
-                    new GBFSFeed("system_information", "http://gbfs.openov.org/nsbike.rs/en/system_information.json"),
-                    new GBFSFeed("station_information", "http://gbfs.openov.org/nsbike.rs/en/station_information.json"),
-                    new GBFSFeed("station_status", "http://gbfs.openov.org/nsbike.rs/en/station_status.json"),
-                    new GBFSFeed("free_bike_status", "http://gbfs.openov.org/nsbike.rs/en/free_bike_status.json"),
-                    new GBFSFeed("system_hours", "http://gbfs.openov.org/nsbike.rs/en/system_hours.json"),
-                    new GBFSFeed("system_calendar", "http://gbfs.openov.org/nsbike.rs/en/system_calendar.json"),
-                    new GBFSFeed("system_regions", "http://gbfs.openov.org/nsbike.rs/en/system_regions.json"),
-                    new GBFSFeed("system_princing_plans", "http://gbfs.openov.org/nsbike.rs/en/system_princing_plans.json"),
-                    new GBFSFeed("system_alerts", "http://gbfs.openov.org/nsbike.rs/en/system_alerts.json"))));
+                    new GBFSFeed("system_information", baseUrl + "system_information.json"),
+                    new GBFSFeed("station_information", baseUrl + "station_information.json"),
+                    new GBFSFeed("station_status", baseUrl + "station_status.json"),
+                    new GBFSFeed("free_bike_status", baseUrl + "free_bike_status.json"),
+                    new GBFSFeed("system_hours", baseUrl + "system_hours.json"),
+                    new GBFSFeed("system_calendar", baseUrl + "system_calendar.json"),
+                    new GBFSFeed("system_regions", baseUrl + "system_regions.json"),
+                    new GBFSFeed("system_princing_plans", baseUrl + "system_princing_plans.json"),
+                    new GBFSFeed("system_alerts", baseUrl + "system_alerts.json"))));
         }}));
 
-        writer.writeValue(new File("/tmp/nsbike.rs/en/gbfs.json"), gbfs);
+        writer.writeValue(basePath.resolve("gbfs.json").toFile(), gbfs);
 
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
         ses.scheduleAtFixedRate(new Runnable() {
@@ -132,7 +131,7 @@ public class Main {
                                 .withLastUpdated(lastUpdated)
                                 .withData(new StationInformationData(Arrays.stream(nsBikeStations).map(nsBikeStation -> new StationInformationStation("http://nsbike.rs/#" + nsBikeStation.getBiciklana(), nsBikeStation.getNaziv(), null, nsBikeStation.getSirina(), nsBikeStation.getVisina(), nsBikeStation.getAdresa(), null, "http://novisad.rs/", null, Arrays.asList("KEY"), nsBikeStation.getZauzeto() + nsBikeStation.getSlobodno())).collect(Collectors.toList())));
 
-                        writer.writeValue(new File("/tmp/nsbike.rs/en/station_information.json"), stationInformation);
+                        writer.writeValue(basePath.resolve("station_information.json").toFile(), stationInformation);
 
                         StationStatus stationStatus = new StationStatus()
                                 .withTtl(60)
@@ -142,14 +141,12 @@ public class Main {
                                                 nsBikeStation.getZauzeto(), nsBikeStation.getSlobodno(), 1, 1, 1,
                                                 LocalDateTime.parse(nsBikeStation.getVreme(), formatter).atZone(ZoneId.systemDefault()).toEpochSecond())).collect(Collectors.toList())));
 
-                        writer.writeValue(new File("/tmp/nsbike.rs/en/station_status.json"), stationStatus);
+                        writer.writeValue(basePath.resolve("station_status.json").toFile(), stationStatus);
                     }
                 } catch (IOException exception) {
 
                 }
             }
         }, 0, 1, TimeUnit.MINUTES);
-
-
     }
 }
