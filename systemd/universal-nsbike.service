@@ -6,6 +6,7 @@ After=syslog.target network.target
 User=universal
 Restart=always
 ExecStart=/opt/universal/bin/universal-xpubxsub tcp://127.0.0.1:6705 tcp://0.0.0.0:6706
+Type=forking
 
 [Install]
 WantedBy=multi-user.target
